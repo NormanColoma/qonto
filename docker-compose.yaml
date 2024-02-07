@@ -1,0 +1,53 @@
+version: "3.7"
+
+services:
+  api:
+    build: .
+    platform: linux/amd64
+    depends_on:
+      - mysql
+      - rabbitmq
+    environment:
+      ENV: run
+      MYSQL_URI: mysql+mysqlconnector://user:password@mysql/qonto
+      RABBITMQ_URI: amqp://guest:guest@rabbitmq:5672
+      FLASK_DEBUG: 1
+      APP_PORT: 5001
+    ports:
+      - "5001:5001"
+    volumes:
+      - .:/usr/src/app
+    networks:
+      - qonto-ddd
+  mysql:
+      image: mysql:8.0
+      environment:
+        MYSQL_DATABASE: 'qonto'
+        MYSQL_USER: 'user'
+        MYSQL_PASSWORD: 'password'
+        MYSQL_ROOT_PASSWORD: 'password'
+      command: --init-file /data/application/init.sql
+      ports:
+        - '3306:3306'
+      volumes:
+        - db:/var/lib/mysql
+        - ./init.sql:/data/application/init.sql
+      networks:
+        - qonto-ddd
+  rabbitmq:
+      image: rabbitmq:3-management-alpine
+      ports:
+        - 5672:5672
+        - 15672:15672
+      volumes:
+        - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
+        - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
+      networks:
+        - qonto-ddd
+volumes:
+  api_modules:
+    driver: local
+volumes:
+  db:
+networks:
+  qonto-ddd:

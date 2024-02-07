@@ -1,0 +1,5 @@
+venv
+Dockerfile
+pytest.ini
+docker-compose.yaml
+README.md
