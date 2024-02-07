@@ -1,5 +1,7 @@
 from datetime import datetime
 
+from domain.account.amount.amount import Amount
+from domain.account.amount.invalid_amount_error import InvalidAmountError
 from domain.account.bic.bic import Bic
 from domain.account.bic.invalid_bic_error import InvalidBicError
 from domain.account.iban.iban import Iban
@@ -9,7 +11,7 @@ from domain.common.domain_entity import DomainEntity
 
 
 class Transfer(DomainEntity):
-    def __init__(self, id: int, account_id: int, created_at: datetime, amount_cents: float, counterparty_name: str,
+    def __init__(self, id: int, account_id: int, created_at: datetime, amount_cents: int, counterparty_name: str,
                  counterparty_iban: str, counterparty_bic: str, description: str):
         super().__init__(id, created_at)
         self.account_id = account_id
@@ -20,7 +22,7 @@ class Transfer(DomainEntity):
         self.description = description
 
     @classmethod
-    def build(cls, id: int, account_id: int, created_at: datetime, amount_cents: float, counterparty_name: str,
+    def build(cls, id: int, account_id: int, created_at: datetime, amount_cents: int, counterparty_name: str,
               counterparty_iban: str, counterparty_bic: str, description: str) -> 'Transfer':
         return cls(id, account_id, created_at, amount_cents, counterparty_name, counterparty_iban, counterparty_bic,
                    description)
@@ -84,16 +86,15 @@ class Transfer(DomainEntity):
         self.__description = description
 
     @property
-    def amount_cents(self) -> float:
+    def amount_cents(self) -> Amount:
         return self.__amount_cents
 
     @amount_cents.setter
-    def amount_cents(self, amount_cents: float) -> None:
-        if amount_cents is None:
-            raise InvalidTransferError('Field amount_cents cannot be empty')
-        if not isinstance(amount_cents, float):
-            raise InvalidTransferError('Field amount_cents must be a valid float number')
-        self.__amount_cents = amount_cents
+    def amount_cents(self, amount_cents: int) -> None:
+        try:
+            self.__amount_cents = Amount(amount_cents)
+        except InvalidAmountError as e:
+            raise InvalidTransferError('Field amount_cents %s' % e)
 
     def to_dict(self) -> dict:
         return {
@@ -102,7 +103,7 @@ class Transfer(DomainEntity):
             'counterparty_name': self.counterparty_name,
             'counterparty_iban': self.counterparty_iban.value,
             'counterparty_bic': self.counterparty_bic.value,
-            'amount_cents': self.amount_cents,
+            'amount_cents': self.amount_cents.value,
             'description': self.description,
         }
 
@@ -111,5 +112,5 @@ class Transfer(DomainEntity):
                 and self.counterparty_name == other.counterparty_name
                 and self.counterparty_iban == other.counterparty_iban
                 and self.counterparty_bic == other.counterparty_bic
-                and self.amount_cents == other.amount_cents and self.account_id == other.account_id
+                and self.amount_cents.value == other.amount_cents.value and self.account_id == other.account_id
                 and self.description == other.description)

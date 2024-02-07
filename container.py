@@ -2,21 +2,14 @@ import os
 
 import pika
 import pinject
-from pymongo import MongoClient
 
 from application.process_transfers.process_transfers import ProcessTransfers
 from infraestructure.bus.event.rabbit_handler import RabbitMQHandler
 from infraestructure.bus.event.rabbitmq_event_bus import RabbitMqEventBus
 from infraestructure.config.config import app_config
 from infraestructure.persistence.mysql.database_handler import SqlAlchemyHandler
+from infraestructure.persistence.mysql.mysql_account_parser import MySqlAccountParser
 from infraestructure.persistence.mysql.mysql_account_repository import MysqlAccountRepository
-
-
-class MongoClientInstance(pinject.BindingSpec):
-    def provide_database_handler(self):
-        env = os.getenv('ENV') or 'run'
-        db_uri = app_config[env].MONGO_URI
-        return MongoClient(db_uri)
 
 
 class DatabaseHandlerInstance(pinject.BindingSpec):
@@ -39,6 +32,7 @@ class RabbitHandler(pinject.BindingSpec):
     def provide_rabbit_handler(self):
         return obj_graph.provide(RabbitMQHandler)
 
+
 class EventBusService(pinject.BindingSpec):
     def provide_event_bus(self):
         return obj_graph.provide(RabbitMqEventBus)
@@ -54,7 +48,12 @@ class AccountRepository(pinject.BindingSpec):
         return obj_graph.provide(MysqlAccountRepository)
 
 
+class AccountParser(pinject.BindingSpec):
+    def provide_account_parser(self):
+        return obj_graph.provide(MySqlAccountParser)
+
+
 obj_graph = pinject.new_object_graph(modules=None,
                                      binding_specs=[DatabaseHandlerInstance(), Config(), EventBusService(),
                                                     ProcessTransfersAppService(), AccountRepository(), RabbitHandler(),
-                                                    RabbitClient()])
+                                                    RabbitClient(), AccountParser()])

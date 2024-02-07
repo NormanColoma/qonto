@@ -1,6 +1,8 @@
 import uuid
 from datetime import datetime
 
+from domain.account.amount.amount import Amount
+from domain.account.amount.invalid_amount_error import InvalidAmountError
 from domain.account.bic.bic import Bic
 from domain.account.bic.invalid_bic_error import InvalidBicError
 from domain.account.iban.iban import Iban
@@ -16,7 +18,7 @@ from domain.common.aggregate_root import AggregateRoot
 class Account(AggregateRoot):
     def __init__(self, id: int, iban: str, bic: str, organization_name: str, created_at: datetime):
         super().__init__(id, created_at)
-        self.balance_cents = 0.00
+        self.balance_cents = 0
         self.iban = iban
         self.bic = bic
         self.organization_name = organization_name
@@ -24,7 +26,7 @@ class Account(AggregateRoot):
 
     @classmethod
     def build(cls, id: int, iban: str, bic: str, created_at: datetime, organization_name: str,
-              balance_cents: float = 0.00) -> 'Account':
+              balance_cents: int = 0) -> 'Account':
         account = cls(id, iban, bic, organization_name, created_at)
         account.balance_cents = balance_cents
 
@@ -53,14 +55,15 @@ class Account(AggregateRoot):
             raise InvalidAccountError('Field bic %s' % e)
 
     @property
-    def balance_cents(self) -> float:
+    def balance_cents(self) -> Amount:
         return self.__balance_cents
 
     @balance_cents.setter
-    def balance_cents(self, balance_cents: float) -> None:
-        if not isinstance(balance_cents, float):
-            raise InvalidAccountError('Field balance_cents must be a valid float number')
-        self.__balance_cents = balance_cents
+    def balance_cents(self, balance_cents: int) -> None:
+        try:
+            self.__balance_cents = Amount(balance_cents)
+        except InvalidAmountError as e:
+            raise InvalidAccountError('Field balance_cents %s' % e)
 
     @property
     def organization_name(self) -> str:
@@ -82,19 +85,20 @@ class Account(AggregateRoot):
     def transfers(self, transfers: [Transfer]):
         self.__transfers = transfers
 
-    def do_transfer(self, quantity: float, counterparty_iban: Iban, counterparty_bic: Bic, counterparty_name: str,
+    def do_transfer(self, amount: Amount, counterparty_iban: Iban, counterparty_bic: Bic, counterparty_name: str,
                     description: str) -> None:
         if self.iban == counterparty_iban:
             raise InvalidTransferOperationError('Cannot perform transfer to the same account')
 
-        updated_balance = self.balance_cents - quantity
-        if updated_balance - quantity < 0:
+        updated_balance = self.balance_cents.value - amount.value
+        if updated_balance - amount.value < 0:
             raise InsufficientFundsError('There are no sufficient funds for doing the transfer')
 
         self.balance_cents = updated_balance
-        transfer = Transfer.build(account_id=self.id, amount_cents=quantity,
+        transfer = Transfer.build(account_id=self.id, amount_cents=amount.value,
                                   counterparty_iban=counterparty_iban.value, counterparty_bic=counterparty_bic.value,
-                                  counterparty_name=counterparty_name, description=description, created_at=datetime.now(),
+                                  counterparty_name=counterparty_name, description=description,
+                                  created_at=datetime.now(),
                                   id=None)
         self.__add_transfer(transfer)
         self.add_event(TransferDoneEvent(self, transfer))
@@ -107,7 +111,7 @@ class Account(AggregateRoot):
             **super().to_dict(),
             'iban': self.iban.value,
             'bic': self.bic.value,
-            'balance_cents': self.balance_cents,
+            'balance_cents': self.balance_cents.value,
             'organization_name': self.organization_name,
         }
 

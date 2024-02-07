@@ -2,6 +2,7 @@ from application.application_service import ApplicationService
 from application.process_transfers.process_transfers_command import ProcessTransfersCommand
 from domain.account.account_not_found_error import AccountNotFoundError
 from domain.account.account_repository import AccountRepository
+from domain.account.amount.amount import Amount
 from domain.account.bic.bic import Bic
 from domain.account.iban.iban import Iban
 from domain.common.bus.event.event_bus import EventBus
@@ -19,12 +20,12 @@ class ProcessTransfers(ApplicationService):
             raise AccountNotFoundError('There is no account with iban %s' % command.organization_iban)
 
         for t in command.credit_transfers:
-            quantity = float(t['amount'])
+            amount = Amount(t['amount'])
             counterparty_iban = Iban(t['counterparty_iban'])
             counterparty_bic = Bic(t['counterparty_bic'])
             counterparty_name = t['counterparty_name']
             desc = t['description']
-            account.do_transfer(quantity=quantity, counterparty_iban=counterparty_iban,
+            account.do_transfer(amount=amount, counterparty_iban=counterparty_iban,
                                 counterparty_bic=counterparty_bic, counterparty_name=counterparty_name,
                                 description=desc)
 

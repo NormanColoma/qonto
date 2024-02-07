@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS bank_accounts(
     iban varchar(34) NOT NULL,
     bic varchar(11) NOT NULL,
     organization_name VARCHAR(255) NOT NULL,
-    balance_cents float(30) NOT NULL,
+    balance_cents int NOT NULL,
     created_at DATETIME NOT NULL,
     PRIMARY KEY (id),
     UNIQUE (iban)
@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS transfers(
     counterparty_name VARCHAR(255) NOT NULL,
     counterparty_iban varchar(34) NOT NULL,
     counterparty_bic varchar(11) NOT NULL,
-    amount_cents float(30) NOT NULL,
+    amount_cents int NOT NULL,
     description TEXT NOT NULL,
     created_at DATETIME NOT NULL,
     PRIMARY KEY (id),

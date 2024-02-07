@@ -5,6 +5,7 @@ import pytest
 from application.process_transfers.process_transfers import ProcessTransfers
 from application.process_transfers.process_transfers_command import ProcessTransfersCommand
 from domain.account.account_not_found_error import AccountNotFoundError
+from domain.account.amount.amount import Amount
 from domain.account.bic.bic import Bic
 from domain.account.iban.iban import Iban
 
@@ -12,7 +13,7 @@ repository = MagicMock()
 event_bus = MagicMock()
 iban = 'ES9121000418450200051333'
 bic = 'CCOPFRPPXXX'
-quantity = '100.00'
+amount = '100.00'
 
 
 @pytest.fixture
@@ -43,12 +44,12 @@ def test_should_propagate_domain_exception(app_service):
     with pytest.raises(Exception):
         app_service.execute(command)
         repository.find.assert_called_once_with(iban)
-        account_domain.do_transfer.assert_called_once_with(quantity, [])
+        account_domain.do_transfer.assert_called_once_with(amount, [])
 
 
 def test_should_process_transfers(app_service):
     command = ProcessTransfersCommand(iban, [{
-        'amount': quantity,
+        'amount': amount,
         'counterparty_name': 'name',
         'counterparty_iban': iban,
         'counterparty_bic': bic,
@@ -63,7 +64,7 @@ def test_should_process_transfers(app_service):
 
     repository.find.assert_called_once_with(Iban(iban))
     account_domain.do_transfer.assert_called_once()
-    assert account_domain.do_transfer.call_args[1]['quantity'] == float(quantity)
+    assert account_domain.do_transfer.call_args[1]['amount'] == Amount(amount)
     assert account_domain.do_transfer.call_args[1]['counterparty_name'] == 'name'
     assert account_domain.do_transfer.call_args[1]['counterparty_iban'] == Iban(iban)
     assert account_domain.do_transfer.call_args[1]['counterparty_bic'] == Bic(bic)
