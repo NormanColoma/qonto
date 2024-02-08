@@ -91,7 +91,7 @@ class Account(AggregateRoot):
             raise InvalidTransferOperationError('Cannot perform transfer to the same account')
 
         updated_balance = self.balance_cents.value - amount.value
-        if updated_balance - amount.value < 0:
+        if updated_balance < 0:
             raise InsufficientFundsError('There are no sufficient funds for doing the transfer')
 
         self.balance_cents = updated_balance
