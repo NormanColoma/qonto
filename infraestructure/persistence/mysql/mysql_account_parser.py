@@ -60,7 +60,7 @@ class TransferRow(Base):
 
 
 class MySqlAccountParser:
-    def toDatabase(self, account: Account) -> AccountRow:
+    def to_database(self, account: Account) -> AccountRow:
         row = AccountRow()
         row.id = account.id
         row.iban = account.iban.value
@@ -80,7 +80,7 @@ class MySqlAccountParser:
             row.transfers.append(t_row)
         return row
 
-    def toDomain(self, row: AccountRow) -> Account:
+    def to_domain(self, row: AccountRow) -> Account:
         return Account.build(id=row.id, iban=row.iban, bic=row.bic,
                              organization_name=row.organization_name, balance_cents=row.balance_cents,
                              created_at=row.created_at) if row is not None else None

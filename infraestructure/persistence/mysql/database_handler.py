@@ -8,7 +8,7 @@ class SqlAlchemyHandler:
     def __init__(self, config: Config):
         self.__config = config
 
-    def getConnection(self):
+    def get_connection(self):
         try:
             engine = create_engine(
                 self.__config.MYSQL_URI,
