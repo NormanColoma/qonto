@@ -31,32 +31,29 @@ ongoing. This approach has the drawback that the larger the number of the transf
 problems depending on the number of the transfers, but as the requirements talks in order of hundreds, and it's an operation that it seems not 
 to be frequently performed we could consider this solution in which we're choosing ACID principles over performance. I've done some test with
 larger data than the examples given and in the order of hundreds the request takes around 500-800ms to complete, while in the order
-of thousand it takes 1.5-3secs. 
-
-If the performance was a problem we could extract the creation of the transfers since the most important
-part is keeping the account balance updated, so for example we could listen the domain events emitted per each transfer and create all of them
-in an async way, so we would solve the performance problems and possible bottlenecks with the database. Still, this solution comes as well
-with another pitfalls such as: 
+of thousand it takes 1.5-3secs. To address potential performance bottlenecks, we could consider decoupling the creation of transfers from the transaction. 
+By asynchronously creating transfers based on domain events, we can improve performance and reduce strain on the database. 
+Nonetheless, this asynchronous approach introduces its own set of challenges, including event loss during transmission and handling failures in event consumption.
 
 - What does happen if some of the events are lost during the transmission? 
 - At consuming the event, what does happen if some transfer cannot be created? 
 - If some events are not acknowledged, how many times are we going to try to resend them?  
 - Would be weird for the user doing a transfer successfully and not seeing it?
 
-Well, there's a lot of questions and problems that arise when we choose eventual consistency that can be solved by applying 
+Well, there's a lot of questions and problems that arise when we embrace eventual consistency that can be solved by applying 
 saga pattern though is a harder scenario to deal with.
 
-At the end it depends on the requirements and tackle the possible trade-offs of each solution. This is the kind of conversation that 
-we normally have when we face problems like these.
+The trade-off between ACID principles and performance considerations ultimately depends on the specific requirements of the application. 
+Conversations around these trade-offs are common when tackling complex problems, highlighting the importance of understanding and addressing the nuances of each solution.
 
 # Improvements
 
 * **Performance test**: In a real scenario having a performance test for foreseeing bottlenecks and performance issues is vital, but given
 the time I had for doing the test I couldn't invest time on this topic.
-* **Improve Broker handling**: I've added RabbitMQ as message broker for emitting events that usually are consumed from another 
+* **Enhanced message broker**: I've added RabbitMQ as message broker for emitting events that usually are consumed from another 
 bounded context, but in a real scenario we'll have to define a strategy for resending nacked messages (retries, interval between retries, dead letters...), 
 creating multiple consumer and so on.
-* **Improve transactions**: If we would consider that the better approach fot this situation needs a higher isolation level and strategies 
+* **Transaction Optimizations**: If we would consider that the better approach fot this situation needs a higher isolation level and strategies 
 for example preventing the table/row being read while there's another transaction using it, we could do it, but again it will be about
 choosing one trade-off or another, because the higher is your isolation level the worst is your performance.
 * **Error handling and logging**: Although the exceptions are being controlled and logged locally we could do some tweaks, for example publishing 
