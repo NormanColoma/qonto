@@ -79,4 +79,4 @@ def test_should_return_NO_CONTENT_when_transfers_done(client, mocker):
     mocker.patch('application.process_transfers.process_transfers.ProcessTransfers.execute')
     result = client.patch('/accounts/transfers',
                           json={"organization_iban": "iban", "credit_transfers": []})
-    assert result.status_code == 204
+    assert result.status_code == 201

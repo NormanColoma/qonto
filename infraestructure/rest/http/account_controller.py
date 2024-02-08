@@ -26,7 +26,7 @@ def do_transfers_from_account():
 
         command = ProcessTransfersCommand(body['organization_iban'], body['credit_transfers'])
         process_transfers.execute(command)
-        return Response(status=204, mimetype='application/json')
+        return Response(status=201, mimetype='application/json')
     except Exception as e:
         if isinstance(e, AccountNotFoundError):
             return Response(status=404, response=json.dumps({'message': e.message}), mimetype='application/json')
