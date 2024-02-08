@@ -1,5 +1,3 @@
-from sqlalchemy import update
-
 from domain.account.account import Account
 from domain.account.account_repository import AccountRepository
 from domain.account.iban.iban import Iban

@@ -19,9 +19,13 @@ def repository():
 
 
 def test_should_find_account(repository):
-    where = MagicMock()
     conn = MagicMock()
-    conn.query.return_value = where
+    query = MagicMock()
+    where = MagicMock()
+    first = MagicMock()
+    where.where = first
+    conn.__enter__.return_value = query
+    query.query.return_value = where
     database_handler.get_connection.return_value = conn
     account_parser.to_domain.return_value = {}
 
@@ -30,4 +34,8 @@ def test_should_find_account(repository):
 
     assert result == {}
     database_handler.get_connection.assert_called_once()
-    conn.query.assert_called_once_with(AccountRow)
+    account_parser.to_domain.assert_called_once()
+    conn.__enter__.assert_called_once()
+    query.query.assert_called_once_with(AccountRow)
+    where.where.assert_called_once()
+    first.assert_called_once()
