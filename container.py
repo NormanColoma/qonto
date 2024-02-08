@@ -2,6 +2,7 @@ import os
 
 import pika
 import pinject
+import sqlalchemy
 
 from application.process_transfers.process_transfers import ProcessTransfers
 from infraestructure.bus.event.rabbit_handler import RabbitMQHandler
@@ -27,6 +28,9 @@ class RabbitClient(pinject.BindingSpec):
     def provide_rabbit_client(self):
         return pika
 
+class SqlClient(pinject.BindingSpec):
+    def provide_sql_client(self):
+        return sqlalchemy
 
 class RabbitHandler(pinject.BindingSpec):
     def provide_rabbit_handler(self):
@@ -56,4 +60,4 @@ class AccountParser(pinject.BindingSpec):
 obj_graph = pinject.new_object_graph(modules=None,
                                      binding_specs=[DatabaseHandlerInstance(), Config(), EventBusService(),
                                                     ProcessTransfersAppService(), AccountRepository(), RabbitHandler(),
-                                                    RabbitClient(), AccountParser()])
+                                                    RabbitClient(), AccountParser(), SqlClient()])

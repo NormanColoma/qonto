@@ -20,7 +20,6 @@ class MysqlAccountRepository(AccountRepository):
                 conn.add(account_row)
             transfer_rows = account_row.transfers
             conn.add_all(transfer_rows)
-            raise Exception
 
     def find(self, iban: Iban) -> Account:
         with self.__database_handler.get_connection() as conn:

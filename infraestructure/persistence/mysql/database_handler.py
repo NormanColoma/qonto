@@ -1,23 +1,23 @@
 from contextlib import contextmanager
 
-from sqlalchemy import create_engine
-from sqlalchemy.orm import Session
+import sqlalchemy
 
 from infraestructure.config.config import Config
 
 
 class SqlAlchemyHandler:
-    def __init__(self, config: Config):
+    def __init__(self, config: Config, sql_client: sqlalchemy):
         self.__config = config
+        self.__client = sql_client
 
     @contextmanager
     def get_connection(self):
         try:
-            engine = create_engine(
+            engine = self.__client.create_engine(
                 self.__config.MYSQL_URI,
                 isolation_level="READ COMMITTED"
             )
-            session = Session(engine)
+            session = self.__client.orm.Session(engine)
             yield session
         except Exception as e:
             session.rollback()
