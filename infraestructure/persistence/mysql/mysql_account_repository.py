@@ -13,16 +13,16 @@ class MysqlAccountRepository(AccountRepository):
         self.__parser = account_parser
 
     def save(self, account: Account) -> None:
-        conn = self.__database_handler.get_connection()
-        account_row = self.__parser.to_database(account)
-        result = conn.query(AccountRow).where(AccountRow.id == account.id).update(account_row.toDict())
-        if result == 0:
-            conn.add(account_row)
-        transfer_rows = account_row.transfers
-        conn.add_all(transfer_rows)
-        conn.commit()
+        with self.__database_handler.get_connection() as conn:
+            account_row = self.__parser.to_database(account)
+            result = conn.query(AccountRow).where(AccountRow.id == account.id).update(account_row.toDict())
+            if result == 0:
+                conn.add(account_row)
+            transfer_rows = account_row.transfers
+            conn.add_all(transfer_rows)
+            raise Exception
 
     def find(self, iban: Iban) -> Account:
-        conn = self.__database_handler.get_connection()
-        row = conn.query(AccountRow).where(AccountRow.iban == iban.value).first()
-        return self.__parser.to_domain(row)
+        with self.__database_handler.get_connection() as conn:
+            row = conn.query(AccountRow).where(AccountRow.iban == iban.value).first()
+            return self.__parser.to_domain(row)
