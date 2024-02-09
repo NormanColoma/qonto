@@ -20,7 +20,8 @@ class AccountRow(Base):
     organization_name: Mapped[str] = mapped_column(String(255), nullable=False)
     balance_cents: Mapped[int] = mapped_column(Integer, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
-    transfers: Mapped[List["TransferRow"]] = relationship()
+    # We don't want to load all transfers that belongs to a bank_account in every select query by default.
+    transfers: Mapped[List["TransferRow"]] = relationship(lazy="raise_on_sql")
 
     def toDict(self):
         return {

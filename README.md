@@ -30,9 +30,9 @@ our account state remains consistent, and this way we're also preventing another
 ongoing. This approach has the drawback that the larger the number of the transfer the longer we take, so we could end up with a performance 
 problems depending on the number of the transfers, but as the requirements talks in order of hundreds, and it's an operation that it seems not 
 to be frequently performed we could consider this solution in which we're choosing ACID principles over performance. I've done some test with
-larger data than the examples given and in the order of hundreds the request takes around 500-800ms to complete, while in the order
-of thousand it takes 1.5-3secs. To address potential performance bottlenecks, we could consider decoupling the creation of transfers from the transaction. 
-By asynchronously creating transfers based on domain events, we can improve performance and reduce strain on the database. 
+larger data than the examples given and in the order of hundreds the request takes around 500-800 ms to complete, while in the order
+of thousand it takes 1.5-4 secs. To address potential performance bottlenecks, we could consider decoupling the creation of transfers from the transaction since
+the most important part here is keeping the account balance consistent. By asynchronously creating transfers based on domain events, we can improve performance and reduce strain on the database. 
 Nonetheless, this asynchronous approach introduces its own set of challenges, including event loss during transmission and handling failures in event consumption.
 
 - What does happen if some of the events are lost during the transmission? 
@@ -50,6 +50,7 @@ Conversations around these trade-offs are common when tackling complex problems,
 
 * **Performance test**: In a real scenario having a performance test for foreseeing bottlenecks and performance issues is vital, but given
 the time I had for doing the test I couldn't invest time on this topic.
+* **Integration test**: We also need integration test for checking that all is working well as a whole. However, integration test are hard to main.
 * **Enhanced message broker**: I've added RabbitMQ as message broker for emitting events that usually are consumed from another 
 bounded context, but in a real scenario we'll have to define a strategy for resending nacked messages (retries, interval between retries, dead letters...), 
 creating multiple consumer and so on.
